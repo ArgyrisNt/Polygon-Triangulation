@@ -19,14 +19,14 @@ private:
     void constructVertices();
     void identifyVertex(vertex &v);
 
-    void handleStart(const edge &e);
-    void handleSplit(const edge &e);
-    void handleEnd(const edge &e);
-    void handleMerge(const edge &e);
-    void handleRegular(const edge &e_pr, const edge &e);
+    void handleStart(edge &e);
+    void handleSplit(edge &e);
+    void handleEnd(edge &e);
+    void handleMerge(edge &e);
+    void handleRegular(edge &e_pr, edge &e);
 
     std::vector<edge> edges;
-    std::vector<vertex> vertices;
+    std::vector<vertex*> vertices;
     std::set<edge> T;
 };
 
