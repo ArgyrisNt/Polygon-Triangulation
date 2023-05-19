@@ -3,12 +3,14 @@
 
 #include <set>
 #include <vector>
-#include "utilities.h"
+#include <deque>
+#include "edge.h"
+#include "vertex.h"
 
 class polygon
 {
 public:
-    polygon(const std::vector<edge>& _edges) : edges(_edges) {}
+    polygon(std::vector<vertex>& _vertices) : vertices(_vertices) { constructEdges(); }
     ~polygon() {}
 
     void makeMonotone();
@@ -16,23 +18,23 @@ public:
     friend std::ostream &operator<<(std::ostream &os, polygon &poly);
 
 private:
-    void constructVertices();
+    void constructEdges();
     void identifyVertex(vertex &v);
 
-    void handleStart(edge &e);
-    void handleSplit(edge &e);
-    void handleEnd(edge &e);
-    void handleMerge(edge &e);
-    void handleRegular(edge &e_pr, edge &e);
+    void handleStart(edge *e);
+    void handleSplit(edge *e);
+    void handleEnd(edge *e_pr);
+    void handleMerge(edge *e_pr);
+    void handleRegular(edge *e_pr, edge *e);
 
-    std::vector<edge> edges;
-    std::vector<vertex*> vertices;
-    std::set<edge> T;
+    std::vector<vertex> vertices;
+    std::deque<edge> edges;
+    std::set<edge*> T;
 };
 
 std::ostream &operator<<(std::ostream &os, polygon &poly)
 {
-    for (auto& edge : poly.edges) os << edge << std::endl; 
+    for (auto& edge : poly.edges) os << edge << std::endl;
     return os;
 }
 
