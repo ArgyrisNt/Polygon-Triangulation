@@ -4,6 +4,7 @@
 #include <math.h>
 #include <fstream>
 #include "edge.h"
+#include <memory>
 
 class edge;
 
@@ -11,13 +12,8 @@ class vertex
 {
 public:
     vertex(double _x, double _y) : x(_x), y(_y), e(nullptr), type(-1) {}
-
-    void operator=(const vertex &v)
-    {
-        x = v.x;
-        y = v.y;
-        e = v.e;
-    }
+    vertex(const vertex& v) 
+    {x = v.x; y = v.y; e = v.e; type = v.type;}
 
     bool operator<(const vertex& v) const
     {
@@ -25,10 +21,13 @@ public:
         return this->y < v.y;
     }
 
+    vertex operator-(const vertex& v) const
+    {return vertex(x - v.x, y - v.y);}
+
     friend std::ostream &operator<<(std::ostream &os, const vertex &v);
 
     double x, y;
-    edge *e;
+    edge* e;
     int type;
 };
 

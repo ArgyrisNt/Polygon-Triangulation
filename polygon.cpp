@@ -6,12 +6,8 @@
 
 void polygon::makeMonotone()
 {
-    std::set<vertex> temp(vertices.begin(), vertices.end());
-    std::vector<vertex> sortedVertices;
-    for (auto i = temp.rbegin(); i != temp.rend(); ++i)
-    {
-        sortedVertices.push_back(*i);
-    }
+    std::vector<vertex> sortedVertices(vertices);
+    std::sort(sortedVertices.begin(), sortedVertices.end(), [](const vertex& v1, const vertex& v2) {return v2 < v1;});
 
     for (int i = 0; i < sortedVertices.size(); ++i)
     {
@@ -42,8 +38,8 @@ void polygon::constructEdges()
 
 void polygon::identifyVertex(vertex &v)
 {
-    vertex vu(v.e->previous->start->x - v.x, v.e->previous->start->y - v.y);
-    vertex vw(v.e->next->start->x - v.x, v.e->next->start->y - v.y);
+    vertex vu(*v.e->previous->start - v);
+    vertex vw(*v.e->next->start - v);
     double theta = atan2(vu.y, vu.x) - atan2(vw.y, vw.x);
     if (theta < 0) { theta += 2 * PI; }
     if (*v.e->previous->start < v && *v.e->next->start < v)
@@ -59,6 +55,12 @@ void polygon::identifyVertex(vertex &v)
     else v.type = 4; // regular vertex
 }
 
+void polygon::addEdge(edge* _previous, vertex* _start, edge* _next)
+{
+    edge newEdge = edge(_previous, _start, _next);
+    edges.push_back(newEdge);
+}
+
 
 
 void polygon::handleStart(edge* e)
@@ -70,12 +72,7 @@ void polygon::handleStart(edge* e)
 void polygon::handleSplit(edge *e)
 {
     auto ej = T.begin();
-    edge newEdge = edge();
-    newEdge.start = e->start;
-    newEdge.next = (*ej)->helper->e;
-    newEdge.previous = e->previous;
-    edges.push_back(newEdge);
-    (*ej)->helper = e->start;
+    addEdge(e->previous, e->start, (*ej)->helper->e);
     edges[(*ej)->id].helper = e->start;
     e->helper = e->start;
     T.insert(e);
@@ -84,37 +81,18 @@ void polygon::handleSplit(edge *e)
 void polygon::handleEnd(edge *e_pr)
 {
     if (e_pr->helper->type == 3)
-    {
-        edge* newEdge = new edge();
-        newEdge->start = e_pr->next->start; // e.end
-        newEdge->next = e_pr->helper->e;
-        newEdge->previous = e_pr;
-        edges.push_back(*newEdge);
-    }
+        addEdge(e_pr, e_pr->next->start, e_pr->helper->e);
     T.erase(e_pr);
 }
 
 void polygon::handleMerge(edge *e_pr)
 {
     if (e_pr->helper->type == 3)
-    {
-        edge* newEdge = new edge();
-        newEdge->start = e_pr->next->start;
-        newEdge->next = e_pr->helper->e;
-        newEdge->previous = e_pr;
-        edges.push_back(*newEdge);
-    }
+        addEdge(e_pr, e_pr->next->start, e_pr->helper->e);
     T.erase(e_pr);
     auto ej = T.begin();
     if ((*ej)->helper->type == 3)
-    {
-        edge* newEdge = new edge();
-        newEdge->start = e_pr->next->start;
-        newEdge->next = (*ej)->helper->e;
-        newEdge->previous = e_pr;
-        edges.push_back(*newEdge);
-    }
-    (*ej)->helper = e_pr->next->start;
+        addEdge(e_pr, e_pr->next->start, (*ej)->helper->e);
     edges[(*ej)->id].helper = e_pr->next->start;
 }
 
@@ -123,13 +101,7 @@ void polygon::handleRegular(edge *e_pr, edge *e)
     if (*e->next->start < *e->start)
     {
         if (e_pr->helper->type == 3)
-        {
-            edge* newEdge = new edge();
-            newEdge->start = e->start;
-            newEdge->next = e_pr->helper->e;
-            newEdge->previous = e_pr;
-            edges.push_back(*newEdge);
-        }
+            addEdge(e_pr, e->start, e_pr->helper->e);
         T.erase(e_pr);
         e->helper = e->start;
         T.insert(e);
@@ -138,14 +110,7 @@ void polygon::handleRegular(edge *e_pr, edge *e)
     {
         auto ej = T.begin();
         if ((*ej)->helper->type == 3)
-        {
-            edge* newEdge = new edge();
-            newEdge->start = e->start;
-            newEdge->next = (*ej)->helper->e;
-            newEdge->previous = e_pr;
-            edges.push_back(*newEdge);
-        }
-        (*ej)->helper = e->start;
+            addEdge(e_pr, e->start, (*ej)->helper->e);
         edges[(*ej)->id].helper = e->start;
     }
 }

@@ -14,25 +14,28 @@ public:
     ~polygon() {}
 
     void makeMonotone();
+    std::vector<vertex> &getVertices() { return vertices; }
+    std::deque<edge> &getEdges() { return edges; }
 
-    friend std::ostream &operator<<(std::ostream &os, polygon &poly);
+    friend std::ostream &operator<<(std::ostream &os, const polygon &poly);
 
 private:
     void constructEdges();
     void identifyVertex(vertex &v);
+    void addEdge(edge* _previous, vertex* _start, edge* _next);
 
     void handleStart(edge *e);
     void handleSplit(edge *e);
-    void handleEnd(edge *e_pr);
-    void handleMerge(edge *e_pr);
-    void handleRegular(edge *e_pr, edge *e);
+    void handleEnd(edge *e_previous);
+    void handleMerge(edge *e_previous);
+    void handleRegular(edge *e_previous, edge *e);
 
     std::vector<vertex> vertices;
     std::deque<edge> edges;
     std::set<edge*> T;
 };
 
-std::ostream &operator<<(std::ostream &os, polygon &poly)
+std::ostream &operator<<(std::ostream &os, const polygon &poly)
 {
     for (auto& edge : poly.edges) os << edge << std::endl;
     return os;

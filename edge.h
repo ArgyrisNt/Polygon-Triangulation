@@ -7,20 +7,15 @@
 class edge
 {
 public:
-    edge() : start(nullptr), previous(nullptr), next(nullptr), helper(nullptr) {}
-
-    void operator=(const edge &e)
-    {
-        start = e.start;
-        previous = e.previous;
-        next = e.next;
-    }
+    edge() : start(nullptr), previous(nullptr), next(nullptr), helper(nullptr), id(-1) {}
+    edge(edge* _previous, vertex* _start, edge* _next) 
+    {previous = _previous; start = _start; next = _next; helper = nullptr; id = -1;}
 
     friend std::ostream &operator<<(std::ostream &os, const edge &e);
 
-    vertex *start;
     edge *previous;
     edge *next;
+    vertex *start;
     vertex *helper;
     int id;
 };
