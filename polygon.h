@@ -4,6 +4,7 @@
 #include <set>
 #include <vector>
 #include <deque>
+#include "face.h"
 #include "edge.h"
 #include "vertex.h"
 
@@ -16,6 +17,7 @@ public:
     void makeMonotone();
     std::vector<vertex> &getVertices() { return vertices; }
     std::deque<edge> &getEdges() { return edges; }
+    std::deque<face> &getFaces() { return faces; }
 
     friend std::ostream &operator<<(std::ostream &os, const polygon &poly);
 
@@ -32,12 +34,16 @@ private:
 
     std::vector<vertex> vertices;
     std::deque<edge> edges;
+    std::deque<face> faces;
     std::set<edge*> T;
 };
 
 std::ostream &operator<<(std::ostream &os, const polygon &poly)
 {
-    for (auto& edge : poly.edges) os << edge << std::endl;
+    for (auto &f : poly.faces)
+    {
+        std::cout << f << "\n\n";
+    }
     return os;
 }
 

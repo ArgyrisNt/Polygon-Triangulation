@@ -3,13 +3,16 @@
 
 #include <fstream>
 #include "vertex.h"
+#include "face.h"
+
+class face;
 
 class edge
 {
 public:
-    edge() : start(nullptr), previous(nullptr), next(nullptr), helper(nullptr), id(-1) {}
-    edge(edge* _previous, vertex* _start, edge* _next) 
-    {previous = _previous; start = _start; next = _next; helper = nullptr; id = -1;}
+    edge() : start(nullptr), previous(nullptr), next(nullptr), helper(nullptr), f(nullptr), id(-1) {}
+    edge(edge* _previous, vertex* _start, edge* _next, int _id = -1) 
+    {previous = _previous; start = _start; next = _next; helper = nullptr; f = nullptr; id = _id;}
 
     friend std::ostream &operator<<(std::ostream &os, const edge &e);
 
@@ -17,6 +20,7 @@ public:
     edge *next;
     vertex *start;
     vertex *helper;
+    face *f;
     int id;
 };
 

@@ -3,8 +3,8 @@
 
 #include <math.h>
 #include <fstream>
+#include "face.h"
 #include "edge.h"
-#include <memory>
 
 class edge;
 

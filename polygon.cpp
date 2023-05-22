@@ -24,15 +24,20 @@ void polygon::makeMonotone()
 void polygon::constructEdges()
 {
     edges = std::deque<edge>(vertices.size());
+    faces = std::deque<face>(1);
     for (int i = 0; i < vertices.size(); ++i)
     {
         edges[i].id = i;
         edges[i].start = &vertices[i];
         edges[i].previous = (i == 0) ? &edges[edges.size() - 1] : &edges[i - 1];
         edges[i].next = (i == vertices.size() - 1) ? &edges[0] : &edges[i + 1];
+        edges[i].f = &faces[0];
 
         vertices[i].e = &edges[i];
     }
+    faces[0].e = &edges[0];
+    faces[0].id = 0;
+
     for (auto& v : vertices) identifyVertex(v);
 }
 
@@ -57,8 +62,47 @@ void polygon::identifyVertex(vertex &v)
 
 void polygon::addEdge(edge* _previous, vertex* _start, edge* _next)
 {
-    edge newEdge = edge(_previous, _start, _next);
-    edges.push_back(newEdge);
+    edge newEdge1 = edge(_previous, _start, _next, edges.size());
+    edge newEdge2 = edge(_next->previous, _next->start, _previous->next, edges.size() + 1);
+    edges.push_back(newEdge1);
+    edges.push_back(newEdge2);
+
+    edges[edges.size() - 1].next->previous = &edges[edges.size() - 1];
+    edges[edges.size() - 1].previous->next = &edges[edges.size() - 1];
+    edges[edges.size() - 2].previous->next = &edges[edges.size() - 2];
+    edges[edges.size() - 2].next->previous = &edges[edges.size() - 2];
+
+    int N = faces.size();
+    face newFace1(faces[faces.size() - 1].id + 1);
+    face newFace2(faces[faces.size() - 1].id + 2);
+    newFace1.e = &edges[edges.size() - 2];
+    newFace2.e = &edges[edges.size() - 1];
+    for (auto iter = faces.begin(); iter != faces.end(); ++iter)
+    {
+        if (_previous->f->id == iter->id)
+        {
+            faces.erase(iter);
+            break;
+        }
+    }
+    faces.push_back(newFace1);
+    faces.push_back(newFace2);
+
+    edge *current = &edges[edges.size() - 1];
+    do
+    {
+        current->f = &faces[faces.size() - 1];
+        current = current->next;
+    }
+    while (current->start != edges[edges.size() - 1].start);
+
+    current = &edges[edges.size() - 2];
+    do
+    {
+        current->f = &faces[faces.size() - 2];
+        current = current->next;
+    } 
+    while (current->start != edges[edges.size() - 2].start);
 }
 
 
@@ -72,7 +116,8 @@ void polygon::handleStart(edge* e)
 void polygon::handleSplit(edge *e)
 {
     auto ej = T.begin();
-    addEdge(e->previous, e->start, (*ej)->helper->e);
+    //addEdge(e->previous, e->start, (*ej)->helper->e);
+    addEdge((*ej)->helper->e->previous, (*ej)->helper, e);
     edges[(*ej)->id].helper = e->start;
     e->helper = e->start;
     T.insert(e);
