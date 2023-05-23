@@ -7,6 +7,7 @@
 #include "face.h"
 #include "edge.h"
 #include "vertex.h"
+#include <map>
 
 class polygon
 {
@@ -15,6 +16,8 @@ public:
     ~polygon() {}
 
     void makeMonotone();
+    void triangulate();
+
     std::vector<vertex> &getVertices() { return vertices; }
     std::deque<edge> &getEdges() { return edges; }
     std::deque<face> &getFaces() { return faces; }
@@ -22,6 +25,10 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const polygon &poly);
 
 private:
+    std::vector<vertex *> computeMonotonePiece(edge *e);
+    std::map<vertex *, int> findChainOfVertices(std::vector<vertex *> &monotonePiece);
+    bool diagonalIsInside(vertex* v1, vertex* v2, vertex* v3);
+
     void constructEdges();
     void identifyVertex(vertex &v);
     void addEdge(edge* _previous, vertex* _start, edge* _next);
@@ -36,6 +43,8 @@ private:
     std::deque<edge> edges;
     std::deque<face> faces;
     std::set<edge*> T;
+
+    bool isMonotone;
 };
 
 std::ostream &operator<<(std::ostream &os, const polygon &poly)

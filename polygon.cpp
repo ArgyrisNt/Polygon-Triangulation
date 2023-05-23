@@ -1,6 +1,8 @@
 #include "polygon.h"
 #include <iostream>
 #include <algorithm>
+#include <map>
+#include <stack>
 
 #define PI 3.1415926535897932384
 
@@ -17,7 +19,106 @@ void polygon::makeMonotone()
         else if (sortedVertices[i].type == 3) {handleMerge(sortedVertices[i].e->previous);}
         else if (sortedVertices[i].type == 4) {handleRegular(sortedVertices[i].e->previous, sortedVertices[i].e);}
     }
+    isMonotone = true;
 }
+
+void polygon::triangulate()
+{
+    if (!isMonotone) return;
+
+    for (int i = 0; i < faces.size(); ++i)
+    {
+        std::vector<vertex*> monotonePiece = computeMonotonePiece(faces[i].e);
+        std::sort(monotonePiece.begin(), monotonePiece.end(), [](vertex* v1, vertex* v2) {return *v2 < *v1;});
+        std::map<vertex*, int> chain = findChainOfVertices(monotonePiece); // 1st-> id of edge , 2nd -> 0:left, 1:right
+
+        std::stack<vertex*> S;
+        S.push(monotonePiece[0]);
+        S.push(monotonePiece[1]);
+        for (int j = 2; j < monotonePiece.size() - 1; ++j)
+        {
+            if (chain[monotonePiece[j]] != chain[S.top()])
+            {
+                while (!S.empty())
+                {
+                    if (S.size() > 1) 
+                    {
+                        edges.push_back(edge(monotonePiece[j]->e->previous, monotonePiece[j], S.top()->e));
+                    }
+                    S.pop();
+                }
+                S.push(monotonePiece[j - 1]);
+                S.push(monotonePiece[j]);
+            }
+            else
+            {
+                vertex* last = S.top();
+                S.pop();
+                while (diagonalIsInside(monotonePiece[j], S.top(), last))
+                {
+                    edges.push_back(edge(monotonePiece[j]->e->previous, monotonePiece[j], S.top()->e));
+                    last = S.top();
+                    S.pop();
+                    if (S.empty()) break;
+                }
+                S.push(last);
+                S.push(monotonePiece[j]);
+            }
+        }
+        while (!S.empty())
+        {
+            S.pop();
+            if (S.size() == 1) 
+            {
+                S.pop();
+                break;
+            }
+            edges.push_back(edge(monotonePiece[monotonePiece.size() - 1]->e->previous, monotonePiece[monotonePiece.size() - 1], S.top()->e));
+        }
+    }
+}
+
+std::vector<vertex*> polygon::computeMonotonePiece(edge* e)
+{
+    std::vector<vertex*> monotonePiece;
+    edge* current = e;
+    do
+    {
+        monotonePiece.push_back(current->start);
+        current = current->next;
+    }
+    while (current->start != e->start);
+
+    return monotonePiece;
+}
+
+std::map<vertex*, int> polygon::findChainOfVertices(std::vector<vertex*>& monotonePiece)
+{
+    std::map<vertex*, int> chain;
+    edge *current = monotonePiece[0]->e;
+    chain[current->start] = 0;
+    do
+    {
+        edge *after = current->next;
+        if (*after->start < *current->start)
+            chain[current->start] = 0;
+        else
+            chain[current->start] = 1;
+        current = after;
+    } while (current->start != monotonePiece[0]->e->start);
+
+    return chain;
+}
+
+bool polygon::diagonalIsInside(vertex* v1, vertex* v2, vertex* v3)
+{
+    vertex v1v3(*v3 - *v1);
+    vertex v1v2(*v2 - *v1);
+
+    int exterior = v1v2.x * v1v3.y - v1v3.x * v1v2.y;
+    return (exterior > 0) ? true : false;
+}
+
 
 
 
@@ -39,6 +140,7 @@ void polygon::constructEdges()
     faces[0].id = 0;
 
     for (auto& v : vertices) identifyVertex(v);
+    isMonotone = false;
 }
 
 void polygon::identifyVertex(vertex &v)
