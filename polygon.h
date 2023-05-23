@@ -4,10 +4,9 @@
 #include <set>
 #include <vector>
 #include <deque>
-#include "face.h"
-#include "edge.h"
-#include "vertex.h"
 #include <map>
+#include <stack>
+#include "face.h"
 
 class polygon
 {
@@ -25,10 +24,6 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const polygon &poly);
 
 private:
-    std::vector<vertex *> computeMonotonePiece(edge *e);
-    std::map<vertex *, int> findChainOfVertices(std::vector<vertex *> &monotonePiece);
-    bool diagonalIsInside(vertex* v1, vertex* v2, vertex* v3);
-
     void constructEdges();
     void identifyVertex(vertex &v);
     void addEdge(edge* _previous, vertex* _start, edge* _next);
@@ -38,6 +33,13 @@ private:
     void handleEnd(edge *e_previous);
     void handleMerge(edge *e_previous);
     void handleRegular(edge *e_previous, edge *e);
+
+    std::vector<vertex *> computeMonotonePiece(edge *e);
+    std::map<vertex *, int> findChainOfVertices(std::vector<vertex *> &monotonePiece);
+    bool diagonalIsInside(vertex *v1, vertex *v2, vertex *v3);
+    void handleVerticesOnDifferentChain(vertex *v_pr, vertex *v, std::stack<vertex *> &S);
+    void handleVerticesOnSameChain(vertex *v, std::stack<vertex *> &S);
+    void handleBottomMostVertex(vertex *v, std::stack<vertex *> &S);
 
     std::vector<vertex> vertices;
     std::deque<edge> edges;

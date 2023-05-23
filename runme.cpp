@@ -1,4 +1,5 @@
 #include <iostream>
+#include <array>
 #include "polygon.h"
 #include <SFML/Graphics.hpp>
 
@@ -48,7 +49,6 @@ int main()
     poly.makeMonotone();
     poly.triangulate();
 
-    //std::cout << poly;
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Monotone pieces of polygon");
     window.setFramerateLimit(1);

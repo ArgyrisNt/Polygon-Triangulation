@@ -1,9 +1,7 @@
 #ifndef H_EDGE
 #define H_EDGE
 
-#include <fstream>
 #include "vertex.h"
-#include "face.h"
 
 class face;
 

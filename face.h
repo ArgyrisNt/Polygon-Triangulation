@@ -2,9 +2,6 @@
 #define H_FACE
 
 #include "edge.h"
-#include "vertex.h"
-
-class edge;
 
 class face
 {
