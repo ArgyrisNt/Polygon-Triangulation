@@ -78,19 +78,16 @@ void polygon::handleSplit(edge *e)
 
 void polygon::handleEnd(edge *e_pr)
 {
-    if (e_pr->helper->type == 3)
-        addEdge(e_pr, e_pr->next->start, e_pr->helper->e);
+    if (e_pr->helper->type == 3) addEdge(e_pr, e_pr->next->start, e_pr->helper->e);
     T.erase(e_pr);
 }
 
 void polygon::handleMerge(edge *e_pr)
 {
-    if (e_pr->helper->type == 3)
-        addEdge(e_pr, e_pr->next->start, e_pr->helper->e);
+    if (e_pr->helper->type == 3) addEdge(e_pr, e_pr->next->start, e_pr->helper->e);
     T.erase(e_pr);
     auto ej = T.begin();
-    if ((*ej)->helper->type == 3)
-        addEdge(e_pr, e_pr->next->start, (*ej)->helper->e);
+    if ((*ej)->helper->type == 3) addEdge(e_pr, e_pr->next->start, (*ej)->helper->e);
     edges[(*ej)->id].helper = e_pr->next->start;
 }
 
@@ -99,8 +96,7 @@ void polygon::handleRegular(edge *e_pr, edge *e)
     bool isOnLeftBoundary = (*e->next->start < *e->start);
     if (isOnLeftBoundary)
     {
-        if (e_pr->helper->type == 3)
-            addEdge(e_pr, e->start, e_pr->helper->e);
+        if (e_pr->helper->type == 3) addEdge(e_pr, e->start, e_pr->helper->e);
         T.erase(e_pr);
         e->helper = e->start;
         T.insert(e);
@@ -108,55 +104,56 @@ void polygon::handleRegular(edge *e_pr, edge *e)
     else
     {
         auto ej = T.begin();
-        if ((*ej)->helper->type == 3)
-            addEdge(e_pr, e->start, (*ej)->helper->e);
+        if ((*ej)->helper->type == 3) addEdge(e_pr, e->start, (*ej)->helper->e);
         edges[(*ej)->id].helper = e->start;
     }
 }
 
 void polygon::addEdge(edge* _previous, vertex* _start, edge* _next)
 {
-    edge newEdge1 = edge(_previous, _start, _next, edges.size());
-    edge newEdge2 = edge(_next->previous, _next->start, _previous->next, edges.size() + 1);
-    edges.push_back(newEdge1);
-    edges.push_back(newEdge2);
+    edges.push_back(edge(_previous, _start, _next, edges.size()));
+    edges.push_back(edge(_next->previous, _next->start, _previous->next, edges.size() + 1));
 
-    edges[edges.size() - 1].next->previous = &edges[edges.size() - 1];
-    edges[edges.size() - 1].previous->next = &edges[edges.size() - 1];
-    edges[edges.size() - 2].previous->next = &edges[edges.size() - 2];
-    edges[edges.size() - 2].next->previous = &edges[edges.size() - 2];
+    int Nfaces = faces.size();
+    eraseOldFace(_previous->f);
+    faces.push_back(face(faces[Nfaces - 1].id + 1, &*(edges.end() - 2)));
+    faces.push_back(face(faces[Nfaces - 1].id + 2, &edges.back()));
 
-    int N = faces.size();
-    face newFace1(faces[faces.size() - 1].id + 1);
-    face newFace2(faces[faces.size() - 1].id + 2);
-    newFace1.e = &edges[edges.size() - 2];
-    newFace2.e = &edges[edges.size() - 1];
+    updateEdges(edges.back(), *(edges.end() - 2));
+}
+
+void polygon::updateEdges(edge &e1, edge &e2)
+{
+    e1.next->previous = &e1;
+    e1.previous->next = &e1;
+    e2.previous->next = &e2;
+    e2.next->previous = &e2;
+
+    edge *current = &e1;
+    do
+    {
+        current->f = &faces.back();
+        current = current->next;
+    } while (current->start != e1.start);
+
+    current = &e2;
+    do
+    {
+        current->f = &*(faces.end() - 2);
+        current = current->next;
+    } while (current->start != e2.start);
+}
+
+void polygon::eraseOldFace(face* f)
+{
     for (auto iter = faces.begin(); iter != faces.end(); ++iter)
     {
-        if (_previous->f->id == iter->id)
+        if (f->id == iter->id)
         {
             faces.erase(iter);
             break;
         }
     }
-    faces.push_back(newFace1);
-    faces.push_back(newFace2);
-
-    edge *current = &edges[edges.size() - 1];
-    do
-    {
-        current->f = &faces[faces.size() - 1];
-        current = current->next;
-    }
-    while (current->start != edges[edges.size() - 1].start);
-
-    current = &edges[edges.size() - 2];
-    do
-    {
-        current->f = &faces[faces.size() - 2];
-        current = current->next;
-    } 
-    while (current->start != edges[edges.size() - 2].start);
 }
 
 
@@ -176,10 +173,8 @@ void polygon::triangulate()
         S.push(monotonePiece[1]);
         for (int j = 2; j < monotonePiece.size() - 1; ++j)
         {
-            if (chain[monotonePiece[j]] != chain[S.top()])
-                handleVerticesOnDifferentChain(monotonePiece[j - 1], monotonePiece[j], S);
-            else
-                handleVerticesOnSameChain(monotonePiece[j], S);
+            if (chain[monotonePiece[j]] != chain[S.top()]) handleVerticesOnDifferentChain(monotonePiece[j - 1], monotonePiece[j], S);
+            else handleVerticesOnSameChain(monotonePiece[j], S);
         }
         handleBottomMostVertex(monotonePiece[monotonePiece.size() - 1], S);
     }
@@ -207,10 +202,8 @@ std::map<vertex*, int> polygon::findChainOfVertices(std::vector<vertex*>& monoto
     do
     {
         edge *after = current->next;
-        if (*after->start < *current->start)
-            chain[current->start] = 0;
-        else
-            chain[current->start] = 1;
+        if (*after->start < *current->start) chain[current->start] = 0;
+        else chain[current->start] = 1;
         current = after;
     } while (current->start != monotonePiece[0]->e->start);
 
@@ -221,8 +214,7 @@ void polygon::handleVerticesOnDifferentChain(vertex* v_pr, vertex* v, std::stack
 {
     while (!S.empty())
     {
-        if (S.size() > 1)
-            edges.push_back(edge(v->e->previous, v, S.top()->e));
+        if (S.size() > 1) edges.push_back(edge(v->e->previous, v, S.top()->e));
         S.pop();
     }
     S.push(v_pr);

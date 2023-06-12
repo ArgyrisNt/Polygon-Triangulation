@@ -27,6 +27,8 @@ private:
     void constructEdges();
     void identifyVertex(vertex &v);
     void addEdge(edge* _previous, vertex* _start, edge* _next);
+    void updateEdges(edge& e1, edge& e2);
+    void eraseOldFace(face* f);
 
     void handleStart(edge *e);
     void handleSplit(edge *e);

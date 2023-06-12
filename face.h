@@ -7,7 +7,7 @@ class face
 {
 public:
     face() : e(nullptr), id(-1) {}
-    face(int _id) : id(_id) , e(nullptr) {}
+    face(int _id, edge* _e = nullptr) : id(_id) , e(_e) {}
 
     friend std::ostream &operator<<(std::ostream &os, const face &f);
 
